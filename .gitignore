@@ -1,0 +1,4 @@
+.venv/ then __pycache__/
+*.pyc then .pytest_cache/
+.vscode/
+*.db.
