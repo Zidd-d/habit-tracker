@@ -1,0 +1,1 @@
+"""The five predefined habits every new user starts with."""

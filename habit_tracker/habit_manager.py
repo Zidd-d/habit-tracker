@@ -1,0 +1,1 @@
+"""The HabitManager class: creates, changes, deletes and ticks off habits."""

@@ -1,0 +1,1 @@
+"""Hand-written example timestamps (4 weeks per predefined habit) for the tests."""
