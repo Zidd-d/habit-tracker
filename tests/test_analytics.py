@@ -1,7 +1,14 @@
 """Tests for the analytics functions."""
 
+from datetime import datetime
+
 from habit_tracker.habit import Habit
-from habit_tracker.analytics import list_habit_names, habits_with_period
+from habit_tracker.analytics import (
+    list_habit_names,
+    habits_with_period,
+    longest_streak,
+    habit_with_longest_streak,
+)
 
 
 def test_list_habit_names():
@@ -15,3 +22,32 @@ def test_habits_with_period():
     stretch = Habit("Stretch", "daily", "Health")
     result = habits_with_period([read, clean, stretch], "daily")
     assert result == [read, stretch]
+
+
+def make_daily_habit(day_numbers):
+    """Helper: daily habit created on 2 Nov 2026, ticked on the given November days."""
+    habit = Habit("Read", "daily", "Learning", creation_time=datetime(2026, 11, 2, 8, 0))
+    habit.completions = [datetime(2026, 11, day, 9, 0) for day in day_numbers]
+    return habit
+
+
+def test_longest_streak_with_gap():
+    habit = make_daily_habit([2, 3, 5])
+    assert longest_streak(habit, datetime(2026, 11, 6, 10, 0)) == 2
+
+
+def test_open_current_cycle_does_not_break_streak():
+    habit = make_daily_habit([2, 3, 4])
+    assert longest_streak(habit, datetime(2026, 11, 5, 10, 0)) == 3
+
+
+def test_no_completions_gives_zero():
+    habit = make_daily_habit([])
+    assert longest_streak(habit, datetime(2026, 11, 6, 10, 0)) == 0
+
+
+def test_habit_with_longest_streak():
+    short = make_daily_habit([2])
+    long = make_daily_habit([2, 3, 4])
+    result = habit_with_longest_streak([short, long], datetime(2026, 11, 5, 10, 0))
+    assert result is long

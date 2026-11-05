@@ -19,7 +19,7 @@ class Habit:
         self.habit_id = habit_id
         self.completions = []
 
-    def _cycle_key(self, moment):
+    def cycle_key(self, moment):
         """Return a label that is equal for all moments in the same cycle."""
         if self.period == "daily":
             return moment.date()
@@ -41,10 +41,10 @@ class Habit:
             time = now
         if time > now:
             return False
-        if self._cycle_key(time) != self._cycle_key(now):
+        if self.cycle_key(time) != self.cycle_key(now):
             return False
         for done in self.completions:
-            if self._cycle_key(done) == self._cycle_key(now):
+            if self.cycle_key(done) == self.cycle_key(now):
                 return False
         self.completions.append(time)
         return True
