@@ -51,3 +51,31 @@ def test_habit_with_longest_streak():
     long = make_daily_habit([2, 3, 4])
     result = habit_with_longest_streak([short, long], datetime(2026, 11, 5, 10, 0))
     assert result is long
+
+def test_weekly_streak_over_three_weeks():
+    habit = Habit("Clean", "weekly", "Home", creation_time=datetime(2026, 11, 2, 8, 0))
+    habit.completions = [
+        datetime(2026, 11, 3, 9, 0),
+        datetime(2026, 11, 10, 9, 0),
+        datetime(2026, 11, 17, 9, 0),
+    ]
+    assert longest_streak(habit, datetime(2026, 11, 19, 10, 0)) == 3
+
+
+def test_weekly_streak_with_missed_week():
+    habit = Habit("Clean", "weekly", "Home", creation_time=datetime(2026, 11, 2, 8, 0))
+    habit.completions = [
+        datetime(2026, 11, 3, 9, 0),
+        datetime(2026, 11, 17, 9, 0),
+    ]
+    assert longest_streak(habit, datetime(2026, 11, 19, 10, 0)) == 1
+
+
+def test_monthly_streak_across_year_boundary():
+    habit = Habit("Review", "monthly", "Work", creation_time=datetime(2026, 11, 15, 8, 0))
+    habit.completions = [
+        datetime(2026, 11, 20, 9, 0),
+        datetime(2026, 12, 5, 9, 0),
+        datetime(2027, 1, 10, 9, 0),
+    ]
+    assert longest_streak(habit, datetime(2027, 1, 20, 10, 0)) == 3
