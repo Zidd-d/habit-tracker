@@ -2,6 +2,9 @@
 
 from datetime import datetime
 
+from datetime import datetime
+
+VALID_PERIODS = ("daily", "weekly", "monthly")
 
 class Habit:
     """A habit that is repeated every day, week or month.
@@ -45,3 +48,19 @@ class Habit:
                 return False
         self.completions.append(time)
         return True
+    def rename(self, new_name):
+        """Change the name of the habit. The name must not be empty."""
+        if not new_name.strip():
+            raise ValueError("Name must not be empty")
+        self.name = new_name.strip()
+
+    def change_period(self, new_period):
+        """Change the period. History is kept, so streaks can change."""
+        if new_period not in VALID_PERIODS:
+            raise ValueError(f"Period must be one of {VALID_PERIODS}")
+        self.period = new_period
+
+    def change_category(self, new_category):
+        """Change the category of the habit."""
+        self.category = new_category
+    
