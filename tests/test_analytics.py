@@ -10,6 +10,7 @@ from habit_tracker.analytics import (
     habit_with_longest_streak,
     consistency,
 )
+from tests.example_data import EXAMPLE_TODAY, build_example_habits
 
 
 def test_list_habit_names():
@@ -53,6 +54,7 @@ def test_habit_with_longest_streak():
     result = habit_with_longest_streak([short, long], datetime(2026, 11, 5, 10, 0))
     assert result is long
 
+
 def test_weekly_streak_over_three_weeks():
     habit = Habit("Clean", "weekly", "Home", creation_time=datetime(2026, 11, 2, 8, 0))
     habit.completions = [
@@ -81,6 +83,7 @@ def test_monthly_streak_across_year_boundary():
     ]
     assert longest_streak(habit, datetime(2027, 1, 20, 10, 0)) == 3
 
+
 def test_consistency_daily_window():
     habit = make_daily_habit([2, 3, 5])
     today = datetime(2026, 11, 6, 10, 0)
@@ -97,3 +100,45 @@ def test_consistency_weekly():
 def test_consistency_not_enough_data():
     habit = Habit("Clean", "weekly", "Home", creation_time=datetime(2026, 11, 2, 8, 0))
     assert consistency(habit, datetime(2026, 11, 19, 10, 0), 3) is None
+
+
+# ----- tests with the four weeks of example data -----
+
+EXPECTED_LONGEST_STREAKS = {
+    "Brush teeth": 9,
+    "Read book 30 min": 5,
+    "Grocery shopping": 2,
+    "Bring out trash": 3,
+    "Update calendar": 6,
+}
+
+
+def get_example_habit(name):
+    return next(habit for habit in build_example_habits() if habit.name == name)
+
+
+def test_example_data_longest_streaks():
+    for habit in build_example_habits():
+        expected = EXPECTED_LONGEST_STREAKS[habit.name]
+        assert longest_streak(habit, EXAMPLE_TODAY) == expected, habit.name
+
+
+def test_example_data_habit_with_longest_streak():
+    best = habit_with_longest_streak(build_example_habits(), EXAMPLE_TODAY)
+    assert best.name == "Brush teeth"
+
+
+def test_example_data_daily_habits():
+    names = list_habit_names(habits_with_period(build_example_habits(), "daily"))
+    assert names == ["Brush teeth", "Read book 30 min", "Update calendar"]
+
+
+def test_example_data_consistency_four_weeks():
+    assert consistency(get_example_habit("Read book 30 min"), EXAMPLE_TODAY, 29) == 17 / 28
+    assert consistency(get_example_habit("Update calendar"), EXAMPLE_TODAY, 29) == 20 / 28
+    assert consistency(get_example_habit("Bring out trash"), EXAMPLE_TODAY, 29) == 3 / 4
+
+
+def test_example_data_consistency_last_week():
+    assert consistency(get_example_habit("Brush teeth"), EXAMPLE_TODAY, 7) == 5 / 6
+    assert consistency(get_example_habit("Read book 30 min"), EXAMPLE_TODAY, 7) == 4 / 6
