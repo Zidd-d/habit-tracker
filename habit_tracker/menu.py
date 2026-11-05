@@ -172,6 +172,7 @@ class Menu:
         print("2. List habits with the same period")
         print("3. Longest streak of all habits")
         print("4. Longest streak of one habit")
+        print("5. Consistency of one habit")
         choice = input("Choose an option: ").strip()
         habits = self.manager.habits
         today = datetime.now()
@@ -196,3 +197,17 @@ class Menu:
             if habit is not None:
                 streak = analytics.longest_streak(habit, today)
                 print(f"Longest streak of '{habit.name}': {streak} {UNITS[habit.period]}.")
+        elif choice == "5":
+            habit = self._choose_habit()
+            if habit is not None:
+                days = input("Over how many days? ").strip()
+                if not days.isdigit() or int(days) < 1:
+                    print("Please enter a whole number of days.")
+                else:
+                    rate = analytics.consistency(habit, today, int(days))
+                    if rate is None:
+                        print("Not enough data: no complete cycle fits in this window.")
+                    else:
+                        print(f"Consistency of '{habit.name}': {rate:.0%}")
+        else:
+            print("Invalid choice.")

@@ -8,6 +8,7 @@ from habit_tracker.analytics import (
     habits_with_period,
     longest_streak,
     habit_with_longest_streak,
+    consistency,
 )
 
 
@@ -79,3 +80,20 @@ def test_monthly_streak_across_year_boundary():
         datetime(2027, 1, 10, 9, 0),
     ]
     assert longest_streak(habit, datetime(2027, 1, 20, 10, 0)) == 3
+
+def test_consistency_daily_window():
+    habit = make_daily_habit([2, 3, 5])
+    today = datetime(2026, 11, 6, 10, 0)
+    assert consistency(habit, today, 3) == 0.5
+    assert consistency(habit, today, 5) == 0.75
+
+
+def test_consistency_weekly():
+    habit = Habit("Clean", "weekly", "Home", creation_time=datetime(2026, 11, 2, 8, 0))
+    habit.completions = [datetime(2026, 11, 3, 9, 0), datetime(2026, 11, 17, 9, 0)]
+    assert consistency(habit, datetime(2026, 11, 19, 10, 0), 28) == 0.5
+
+
+def test_consistency_not_enough_data():
+    habit = Habit("Clean", "weekly", "Home", creation_time=datetime(2026, 11, 2, 8, 0))
+    assert consistency(habit, datetime(2026, 11, 19, 10, 0), 3) is None
