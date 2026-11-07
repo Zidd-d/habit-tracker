@@ -2,20 +2,23 @@
 
 from datetime import datetime
 
-from datetime import datetime
-
 VALID_PERIODS = ("daily", "weekly", "monthly")
+
 
 class Habit:
     """A habit that is repeated every day, week or month.
 
     It stores its name, period, category, creation time and the
-    timestamps of all completions."""
+    timestamps of all completions.
+    """
+
     def __init__(self, name, period, category, creation_time=None, habit_id=None):
         self.name = name
         self.period = period
         self.category = category
+        # Without a given creation time (new habit), use the current time.
         self.creation_time = creation_time if creation_time is not None else datetime.now()
+        # None until the repository saves the habit and the database assigns an ID.
         self.habit_id = habit_id
         self.completions = []
 
@@ -24,6 +27,7 @@ class Habit:
         if self.period == "daily":
             return moment.date()
         if self.period == "weekly":
+            # ISO weeks run from Monday to Sunday.
             year, week, _ = moment.isocalendar()
             return (year, week)
         if self.period == "monthly":
@@ -48,6 +52,7 @@ class Habit:
                 return False
         self.completions.append(time)
         return True
+
     def rename(self, new_name):
         """Change the name of the habit. The name must not be empty."""
         if not new_name.strip():
@@ -63,4 +68,3 @@ class Habit:
     def change_category(self, new_category):
         """Change the category of the habit."""
         self.category = new_category
-    

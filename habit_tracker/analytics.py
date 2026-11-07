@@ -1,9 +1,12 @@
-"""Analytics functions: streaks, consistency and habit filters."""
+"""Analytics functions: streaks, consistency and habit filters.
+
+All functions are pure: they only read the habits they are given and never
+change them or touch the database. `today` is a parameter, which makes the
+results easy to test.
+"""
 
 from datetime import timedelta
 from itertools import groupby
-
-from tests.example_data import EXAMPLE_TODAY, build_example_habits
 
 
 def list_habit_names(habits):
@@ -15,12 +18,14 @@ def habits_with_period(habits, period):
     """Return only the habits that have the given period."""
     return list(filter(lambda habit: habit.period == period, habits))
 
+
 def _next_cycle_moment(moment, period):
     """Return a moment that lies in the cycle after the one of `moment`."""
     if period == "daily":
         return moment + timedelta(days=1)
     if period == "weekly":
         return moment + timedelta(weeks=1)
+    # Monthly: jump to the 1st of the next month (December -> January, next year).
     year = moment.year + moment.month // 12
     month = moment.month % 12 + 1
     return moment.replace(year=year, month=month, day=1)
@@ -38,11 +43,16 @@ def _cycle_moments(habit, today):
 
 def longest_streak(habit, today):
     """Return the longest streak of consecutive completed cycles."""
+    # Labels of all cycles in which the habit was ticked off at least once.
     done = {habit.cycle_key(time) for time in habit.completions}
+    # One label per cycle, from the creation of the habit to the current cycle.
     keys = [habit.cycle_key(moment) for moment in _cycle_moments(habit, today)]
+    # The current cycle is still open, so it must not count as missed.
     if keys and keys[-1] not in done:
         keys = keys[:-1]
+    # True = cycle completed, False = cycle missed.
     flags = [key in done for key in keys]
+    # Lengths of all runs of consecutive True values.
     runs = [len(list(group)) for value, group in groupby(flags) if value]
     return max(runs, default=0)
 
@@ -51,15 +61,18 @@ def habit_with_longest_streak(habits, today):
     """Return the habit with the longest streak, or None if there are no habits."""
     return max(habits, key=lambda habit: longest_streak(habit, today), default=None)
 
+
 def _cycle_bounds(moment, period):
     """Return the first and last day (as dates) of the cycle containing moment."""
     day = moment.date()
     if period == "daily":
         return day, day
     if period == "weekly":
+        # weekday() is 0 for Monday, so this is the Monday of that week.
         start = day - timedelta(days=day.weekday())
         return start, start + timedelta(days=6)
     start = day.replace(day=1)
+    # Day 28 plus 4 days always lands in the next month; its 1st is the next start.
     next_month_start = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
     return start, next_month_start - timedelta(days=1)
 
@@ -75,6 +88,7 @@ def consistency(habit, today, window_days):
     window_start = today.date() - timedelta(days=window_days - 1)
 
     def counts(moment):
+        # A cycle counts if it starts inside the window and ended before today.
         first_day, last_day = _cycle_bounds(moment, habit.period)
         return first_day >= window_start and last_day < today.date()
 
@@ -84,42 +98,3 @@ def consistency(habit, today, window_days):
     done = {habit.cycle_key(time) for time in habit.completions}
     completed = [moment for moment in cycles if habit.cycle_key(moment) in done]
     return len(completed) / len(cycles)
-
-EXPECTED_LONGEST_STREAKS = {
-    "Brush teeth": 9,
-    "Read book 30 min": 5,
-    "Grocery shopping": 2,
-    "Bring out trash": 3,
-    "Update calendar": 6,
-}
-
-
-def get_example_habit(name):
-    return next(habit for habit in build_example_habits() if habit.name == name)
-
-
-def test_example_data_longest_streaks():
-    for habit in build_example_habits():
-        expected = EXPECTED_LONGEST_STREAKS[habit.name]
-        assert longest_streak(habit, EXAMPLE_TODAY) == expected, habit.name
-
-
-def test_example_data_habit_with_longest_streak():
-    best = habit_with_longest_streak(build_example_habits(), EXAMPLE_TODAY)
-    assert best.name == "Brush teeth"
-
-
-def test_example_data_daily_habits():
-    names = list_habit_names(habits_with_period(build_example_habits(), "daily"))
-    assert names == ["Brush teeth", "Read book 30 min", "Update calendar"]
-
-
-def test_example_data_consistency_four_weeks():
-    assert consistency(get_example_habit("Read book 30 min"), EXAMPLE_TODAY, 29) == 17 / 28
-    assert consistency(get_example_habit("Update calendar"), EXAMPLE_TODAY, 29) == 20 / 28
-    assert consistency(get_example_habit("Bring out trash"), EXAMPLE_TODAY, 29) == 3 / 4
-
-
-def test_example_data_consistency_last_week():
-    assert consistency(get_example_habit("Brush teeth"), EXAMPLE_TODAY, 7) == 5 / 6
-    assert consistency(get_example_habit("Read book 30 min"), EXAMPLE_TODAY, 7) == 4 / 6
