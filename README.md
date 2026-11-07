@@ -94,11 +94,33 @@ pytest
 ```
 
 The tests use four weeks of hand-written example data for the five predefined
-habits (`tests/example_data.py`).
+habits. It is stored in `tests/example_data.py` and covers 5 October to
+1 November 2026, with deliberate gaps so that streaks and consistency can be
+checked. The tests in `tests/test_analytics.py` whose names start with
+`test_example_data_` run the analytics on this data and compare the results
+with the expected values:
+
+| Habit | Period | Longest streak |
+|---|---|---|
+| Brush teeth | daily | 9 days |
+| Read book 30 min | daily | 5 days |
+| Grocery shopping | weekly | 2 weeks |
+| Bring out trash | weekly | 3 weeks |
+| Update calendar | daily | 6 days |
+
+## Try the program with the example data
+
+To explore the menu with the example data instead of an empty start, run:
+
+```
+python load_demo_data.py
+```
+
+This builds a separate demo database (`data/demo.db`) from the example data
+and starts the menu. Your own data in `data/habits.db` is not touched.
 
 ## Project structure
 
-```
 habit_tracker_phase2/
   habit_tracker/
     habit.py                 Habit class (data and tick-off rules)
@@ -107,7 +129,12 @@ habit_tracker_phase2/
     analytics.py             Streaks, consistency and filters (functional style)
     menu.py                  Command-line menu
     predefined_habits.py     The five starting habits
-  tests/                     pytest tests and example data
+  tests/
+    example_data.py          Four weeks of example data for the predefined habits
+    test_habit.py            Tests for the Habit class
+    test_analytics.py        Tests for the analytics, including the example data
+    test_repository.py       Tests for the SQLite repository
+    test_manager.py          Tests for the manager
   main.py                    Start the program here
-  requirements.txt
-```
+  load_demo_data.py          Start the menu with the example data (demo)
+  requirements.txt           Packages needed for the tests (pytest)
